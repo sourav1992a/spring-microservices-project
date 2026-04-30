@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+
+  api-gateway:
+    build: ./api-gateway-service
+    container_name: api-gateway-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+    command: ["sh", "-c", "sleep 20 && java -jar /app.jar"]
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - eureka-server
+    command: ["sh", "-c", "sleep 20 && java -jar /app.jar"]
+
+  order-service:
+    build: ./order_service
+    container_name: order_service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - eureka-server
+      - user-service
+      - rabbitmq
+    command: ["sh", "-c", "sleep 20 && java -jar /app.jar"]
+
+  notification-service:
+    build: ./notification_service
+    container_name: notification_service
+    ports:
+      - "8084:8084"
+    depends_on:
+      - eureka-server
+      - rabbitmq
+    command: ["sh", "-c", "sleep 20 && java -jar /app.jar"]
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
